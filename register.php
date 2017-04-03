@@ -1,6 +1,7 @@
-<?php require 'includes/header.php'; ?>
-
 <?php
+
+require_once 'includes/functions.php';
+session_start();
 
 if (!empty($_POST)){
 
@@ -48,6 +49,7 @@ if (!empty($_POST)){
         $req->execute([$_POST['username'], $password, $_POST['email'], $token]);
         $user_id = $pdo->lastInsertId();
         mail($_POST['email'], 'Confirmation de votre compte', "Afin de valider votre compte, veuillez cliquer sur ce lien\n\nhttp://127.0.0.1/gatuto/confirm.php?id=$user_id&token=$token");
+        $_SESSION['flash']['success'] = 'Votre compte a bien été créé, un email de confirmation vous a été envoyé.';
         header('Location: login.php');
         exit();
     }
@@ -56,7 +58,7 @@ if (!empty($_POST)){
 
 ?>
 
-
+<?php require 'includes/header.php'; ?>
 
 
 <h1>S'inscrire</h1>
