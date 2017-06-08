@@ -1,57 +1,40 @@
 <?php
 
 require_once 'includes/functions.php';
-session_start();
+require_once 'includes/bootstrap.php';
+
+
 
 if (!empty($_POST)){
 
     $errors = array();
-    require_once 'includes/db.php';
-
-    if (empty($_POST['username']) || !preg_match('/^[a-zA-Z0-9_]+$/', $_POST['username'])){
-        $errors['username'] = 'Votre pseudo est invalide';
-    } else {
-        $req = $pdo->prepare('SELECT id FROM users WHERE username = ?');
-        $req->execute([$_POST['username']]);
-        $user = $req->fetch();
-        if ($user){
-            $errors['username'] = 'Ce pseudo est déjà utilisé';
-        }
+    $db = App::getDatabase();
+    $validator = new Validator($_POST);
+    $validator->isAlpha('username', "Votre pseudo n'est pas valide (alphanumérique)");
+    if($validator->isValid()){
+        $validator->isUniq('username', $db, 'users', 'Ce pseudo est déjà pris');
     }
-
-    if (empty($_POST['email']) || !filter_var($_POST['email'], FILTER_VALIDATE_EMAIL)){
-        $errors['email'] = 'Votre adresse email est invalide';
-    } else {
-        $req = $pdo->prepare('SELECT id FROM users WHERE email = ?');
-        $req->execute([$_POST['email']]);
-        $user = $req->fetch();
-        if ($user){
-            $errors['email'] = 'Cette adresse email est déjà utilisée';
-        }
+    $validator->isEmail('email', "Votre email n'est pas valide");
+    if($validator->isValid()){
+        $validator->isUniq('email', $db, 'users', 'Cet email est déjà utilisé pour un autre compte');
     }
+    $validator->isConfirmed('password', 'Vous devez rentrer un mot de passe valide');
 
-    if (empty($_POST['password'])){
-        $errors['password'] = 'Veuillez entrer un mot de passe';
-    }
-
-    if (empty($_POST['confirm_password'])){
-        $errors['confirm_password'] = 'Veuillez confirmer votre mot de passe';
-    }
-
-    if ($_POST['confirm_password'] != $_POST['password']){
-        $errors['confirm_password'] = 'Les mots de passe ne correspondent pas';
-    }
-
-    if(empty($errors)){
-        $req = $pdo->prepare("INSERT INTO users SET username = ?, password = ?, email = ?, confirmation_token = ?");
+    if($validator->isValid()){
         $password = password_hash($_POST['password'], PASSWORD_BCRYPT);
         $token = str_random(60);
-        $req->execute([$_POST['username'], $password, $_POST['email'], $token]);
-        $user_id = $pdo->lastInsertId();
+        $db->query("INSERT INTO users SET username = ?, password = ?, email = ?, confirmation_token = ?", [
+            $_POST['username'],
+            $password,
+            $_POST['email'],
+            $token]);
+        $user_id = $db->lastInsertId();
         mail($_POST['email'], 'Confirmation de votre compte', "Afin de valider votre compte, veuillez cliquer sur ce lien\n\nhttp://127.0.0.1/gatuto/confirm.php?id=$user_id&token=$token");
         $_SESSION['flash']['success'] = 'Votre compte a bien été créé, un email de confirmation vous a été envoyé.';
         header('Location: login.php');
         exit();
+    }else{
+        $errors = $validator->getErrors();
     }
     //debug($errors);
 }
