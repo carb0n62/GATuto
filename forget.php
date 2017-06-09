@@ -1,20 +1,14 @@
 <?php
+require 'includes/bootstrap.php';
 if (!empty($_POST) || !empty($_POST['email'])){
-    require_once 'includes/db.php';
-    require_once 'includes/functions.php';
-    session_start();
-    $req = $pdo->prepare('SELECT * FROM users WHERE email = ? AND confirmed_at IS NOT NULL');
-    $req->execute([$_POST['email']]);
-    $user = $req->fetch();
-    if ($user){
-        $reset_token = str_random(60);
-        $pdo->prepare('UPDATE users SET reset_token = ?, reset_at = NOW() WHERE id = ?')->execute([$reset_token, $user->id]);
-        mail($_POST['email'], 'Réinitialisation de votre mot de passe', "Afin de réinitialiser votre mot de passe, veuillez cliquer sur ce lien\n\nhttp://127.0.0.1/gatuto/reset.php?id={$user->id}&token=$reset_token");
-        $_SESSION['flash']['success'] = 'Un mail vous a été envoyé pour réinitialiser votre mot de passe.';
-        header('Location: login.php');
-        exit();
-    } else {
-        $_SESSION['flash']['danger'] = 'L\'adresse email n\'existe pas.';
+    $db = App::getDatabase();
+    $auth = App::getAuth();
+    $session = Session::getInstance();
+    if ($auth->resetPassword($db, $_POST['email'])){
+        $session->setFlash('success', 'Un mail vous a été envoyé pour réinitialiser votre mot de passe.');
+        App::redirect('login.php');
+    }else{
+        $session->setFlash('danger', 'Aucun compte ne correspond à cette adresse');
     }
 }
 ?>
