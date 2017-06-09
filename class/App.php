@@ -9,4 +9,13 @@ class App{
         }
         return self::$db;
     }
+
+    static function getAuth(){
+        return new Auth(Session::getInstance(), ['restriction_msg' => 'You need to be logged in to access this page.']);
+    }
+
+    static function redirect($page){
+        header("Location: $page");
+        exit();
+    }
 }

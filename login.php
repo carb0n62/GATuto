@@ -1,4 +1,5 @@
 <?php
+require 'includes/bootstrap.php';
 require_once 'includes/functions.php';
 reconnect_from_cookie();
 if (isset($_SESSION['auth'])){

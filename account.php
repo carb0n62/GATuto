@@ -1,6 +1,6 @@
 <?php
-require 'includes/functions.php';
-check_login();
+require 'includes/bootstrap.php';
+App::getAuth()->restrict();
 
 if (!empty($_POST)){
     if (empty($_POST['password']) || $_POST['password'] != $_POST['confirm_password']){

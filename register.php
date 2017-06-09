@@ -21,18 +21,10 @@ if (!empty($_POST)){
     $validator->isConfirmed('password', 'Vous devez rentrer un mot de passe valide');
 
     if($validator->isValid()){
-        $password = password_hash($_POST['password'], PASSWORD_BCRYPT);
-        $token = str_random(60);
-        $db->query("INSERT INTO users SET username = ?, password = ?, email = ?, confirmation_token = ?", [
-            $_POST['username'],
-            $password,
-            $_POST['email'],
-            $token]);
-        $user_id = $db->lastInsertId();
-        mail($_POST['email'], 'Confirmation de votre compte', "Afin de valider votre compte, veuillez cliquer sur ce lien\n\nhttp://127.0.0.1/gatuto/confirm.php?id=$user_id&token=$token");
-        $_SESSION['flash']['success'] = 'Votre compte a bien été créé, un email de confirmation vous a été envoyé.';
-        header('Location: login.php');
-        exit();
+
+        App::getAuth()->register($db, $_POST['username'], $_POST['password'], $_POST['email']);
+        Session::getInstance()->setFlash('success', 'Votre compte a bien été créé, un email de confirmation vous a été envoyé.');
+        App::redirect('login.php');
     }else{
         $errors = $validator->getErrors();
     }
