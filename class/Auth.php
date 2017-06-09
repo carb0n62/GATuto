@@ -92,4 +92,9 @@ class Auth
         setcookie('remember', $user_id . '==' . $remember_token . sha1($user_id . 'heisenberg'), time() + 60 * 60 * 24 * 7);
     }
 
+    public function logout(){
+        setcookie('remember', NULL, -1);
+        $this->session->delete('auth');
+    }
+
 }

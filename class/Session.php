@@ -36,4 +36,8 @@ class Session{
     public function read($key){
         return isset($_SESSION[$key]) ? $_SESSION[$key] : null;
     }
+
+    public function delete($key){
+        unset($_SESSION[$key]);
+    }
 }
